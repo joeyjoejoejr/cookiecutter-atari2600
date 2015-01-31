@@ -19,9 +19,16 @@ have dasm on your path.
 Usage
 -----
 
+You will need to install DASM (Build from source for nix systems):
+[dasm source](http://sourceforge.net/p/dasm-dillon/code/HEAD/tree/)
+
+You will need to install Stella: http://stella.sourceforge.net/
+
 You need [cookiecutter](https://github.com/audreyr/cookiecutter), a tool to create projects from project
 templates. Once installed (in a virtualenv or just with `pip install
 cookiecutter`), you can use the following command:
 
     cookiecutter https://github.com/joeyjoejoejr/cookiecutter-atari2600.git
     cd your-project
+    # edit your makefile to include the path to stella
+    make run
