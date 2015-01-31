@@ -1,0 +1,7 @@
+{
+    "full_name": "Joe Jackson",
+    "email": "cpmhjoe@gmail.com",
+    "repo_name": "cookiecutter-atari2600",
+    "project_name": "atari2600",
+    "project_description": "Basic Atari 2600 project setup"
+}

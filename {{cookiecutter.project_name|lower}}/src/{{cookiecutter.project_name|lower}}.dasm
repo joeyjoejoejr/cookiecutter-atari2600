@@ -1,0 +1,141 @@
+; TODO You may want to change the copyright of all files. This is the
+; TODO ISC license. Choose another one if you want.
+;
+; Copyright (c) 2015 {{cookiecutter.full_name}} <{{cookiecutter.email}}>
+;
+; Permission to use, copy, modify, and/or distribute this software for any
+; purpose with or without fee is hereby granted, provided that the above
+; copyright notice and this permission notice appear in all copies.
+;
+; THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+; WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+; MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+; ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+; WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+; ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+; OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+  processor 6502
+  include "vcs.h"
+  include "macro.h"
+
+;------------------------------------------------------------------------------
+; Variables
+
+  seg.u vars
+  org $80                             ; start of RAM
+CTRLPF_shadow ds 1                    ; shadow playfield
+
+;------------------------------------------------------------------------------
+
+  seg
+  org $F000
+
+Reset
+  ; clear RAM and all TIA registers
+
+  ldx #0
+  lda #0
+Clear sta 0,x
+  inx
+  bne Clear
+
+;------------------------------------------------------------------------------
+; Once only initialization
+
+  lda #%00000000                      ; reflect playfield
+  sta CTRLPF_shadow
+  sta CTRLPF
+
+  lda #$45
+  sta COLUPF                          ; set playfield color
+
+;------------------------------------------------------------------------------
+
+StartOfFrame
+  ; Start of a new frame
+  ; Start of vertical blank
+  lda #0
+  sta VBLANK
+
+  lda #2
+  sta VSYNC
+
+  sta WSYNC
+  sta WSYNC
+  sta WSYNC                           ; 3 scanlines of VSYNC signal
+
+  lda #0
+  sta VSYNC
+
+;------------------------------------------------------------------------------
+; 37 lines of vertical blank
+
+  ldx #0                              ; start at 0
+VerticalBlank sta WSYNC               ; wait for scanline 37 times
+  inx
+  cpx #37
+  bne VerticalBlank
+
+;------------------------------------------------------------------------------
+; 192 scanlines of color change (our picture)
+
+  ldx #0                              ; scanline counter
+
+Display
+  lda screen_STRIP_1,x                ; PF0 Left
+  sta PF0
+
+  lda screen_STRIP_2,x                ; PF1 Left
+  sta PF1
+
+  lda screen_STRIP_3,x                ; PF2 Left
+  sta PF2
+
+  sleep 6
+
+  lda screen_STRIP_4,x                ; PF0 Right
+  sta PF0
+
+  lda screen_STRIP_5,x                ; PF1 Right
+  sta PF1
+
+  lda screen_STRIP_6,x                ; PF2 Right
+  sta PF2
+
+  sta WSYNC
+
+  inx
+  cpx #192
+  bne Display
+
+;------------------------------------------------------------------------------
+
+  lda #%01000010                       ; end of screen enter blanking
+  sta VBLANK
+
+  ; 30 scanlines of overscan
+
+  ldx #0
+Overscan sta WSYNC
+  inx
+  cpx #30
+  bne Overscan
+
+  jmp StartOfFrame
+
+  include "test.bmp"                  ; The make system will convert bitmap files
+                                      ; Data tables. They will be names the same
+                                      ; as the bitmap images in the playfields 
+                                      ; directory
+
+;------------------------------------------------------------------------------
+
+  org $FFFA
+
+InterruptVectors
+  .word Reset          ; NMI
+  .word Reset          ; RESET
+  .word Reset          ; IRQ
+
+  END
