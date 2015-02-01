@@ -40,10 +40,13 @@ Clear sta 0,x
   inx
   bne Clear
 
+  ldx #$FF
+  txs                                 ; set stack pointer
+
 ;------------------------------------------------------------------------------
 ; Once only initialization
 
-  lda #%00000000                      ; reflect playfield
+  lda #%00000000                      ; unreflected playfield
   sta CTRLPF_shadow
   sta CTRLPF
 
